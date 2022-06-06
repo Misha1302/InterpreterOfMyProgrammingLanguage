@@ -559,12 +559,18 @@ public struct BigFloat
             valA *= BigInteger.Pow(10, b.Radix - a.Radix);
         }
 
-        return new BigFloat(valA + valB, radix);
+        var returnValue = new BigFloat(valA + valB, radix);
+        // if (Round(returnValue, divmax - 5) == WholePart(returnValue) + 1) return WholePart(returnValue) + 1;
+        // if (Round(returnValue, divmax - 5) == WholePart(returnValue) - 1) return WholePart(returnValue) - 1;
+        return returnValue;
     }
 
     public static BigFloat operator -(BigFloat a, BigFloat b)
     {
-        return a + -b;
+        var returnValue = a + -b;
+        // if (Round(returnValue, divmax - 5) == WholePart(returnValue) + 1) return WholePart(returnValue) + 1;
+        // if (Round(returnValue, divmax - 5) == WholePart(returnValue) - 1) return WholePart(returnValue) - 1;
+        return returnValue;
     }
 
     public static BigFloat WholePart(BigFloat bigFloat)
@@ -641,7 +647,10 @@ public struct BigFloat
             valA *= 10;
         }
 
-        return new BigFloat(result, radix);
+        var returnValue = new BigFloat(result, radix);
+        if (Round(returnValue, divmax - 5) == WholePart(returnValue) + 1) return WholePart(returnValue) + 1;
+        if (Round(returnValue, divmax - 5) == WholePart(returnValue) - 1) return WholePart(returnValue) - 1;
+        return returnValue;
     }
 
     public static BigFloat operator %(BigFloat a, BigFloat b)
@@ -668,7 +677,10 @@ public struct BigFloat
             valA *= BigInteger.Pow(10, b.Radix - a.Radix);
         }
 
-        return new BigFloat(valA % valB, radix);
+        var returnValue = new BigFloat(valA % valB, radix);
+        if (Round(returnValue, divmax - 5) == WholePart(returnValue) + 1) return WholePart(returnValue) + 1;
+        if (Round(returnValue, divmax - 5) == WholePart(returnValue) - 1) return WholePart(returnValue) - 1;
+        return returnValue;
     }
 
     public static BigFloat operator &(BigFloat a, BigFloat b)
@@ -721,15 +733,32 @@ public struct BigFloat
         return new BigFloat(valA | valB, radix);
     }
 
+    public static BigFloat Root(BigFloat a)
+    {
+        BigFloat t;
+        var squareRoot = a;
+        do
+        {
+            t = squareRoot;
+            squareRoot = (t + a / t) / 2;
+        } while (t - squareRoot != 0);
+
+        return squareRoot;
+    }
+
     public static BigFloat operator ^(BigFloat a, BigFloat b)
     {
-        var bValue = Convert.ToInt32(b.Value.ToString());
-        if (bValue == 0) return new BigFloat(1);
+        if (b == 0) return new BigFloat(1);
+        var result = a;
+        if (b > 0)
+        {
+            for (var i = 1; i < b; i++) result *= a;
+            return result;
+        }
 
-        var result = new BigFloat(a.Value);
-        for (var i = 1; i < bValue; i++)
-            result *= a;
-        return result;
+        b = -b;
+        for (var i = 1; i < b; i++) result *= a;
+        return 1 / result;
 
         /*
         if (a.Radix < 0 || b.Radix < 0)

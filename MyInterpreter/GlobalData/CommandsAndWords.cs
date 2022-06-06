@@ -1,10 +1,7 @@
 ﻿namespace GlobalData;
 
-public static class EnumerationCommandsAndWords
+public static class CommandsAndWords
 {
-    /// <summary>
-    ///     Don't put an empty string!
-    /// </summary>
     public static readonly (string @string, TokenKind @enum)[] Commands =
     {
         ("print", TokenKind.print),
@@ -16,7 +13,7 @@ public static class EnumerationCommandsAndWords
         ("var", TokenKind.var)
     };
 
-    public static void BubbleEnumerationCommandsSort()
+    public static void BubbleCommandsSort()
     {
         for (var i = 0; i < Commands.Length; i++)
         for (var j = 0; j < Commands.Length - 1; j++)
@@ -28,7 +25,7 @@ public static class EnumerationCommandsAndWords
         }
     }
 
-    public static void BubbleEnumerationWordSort()
+    public static void BubbleWordSort()
     {
         for (var i = 0; i < Words.Length; i++)
         for (var j = 0; j < Words.Length - 1; j++)

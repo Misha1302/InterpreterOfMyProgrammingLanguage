@@ -38,6 +38,7 @@ public class Code
                 splitCode[i] = Regex.Replace(splitCode[i], "//", "\\");
                 splitCode[i] = Regex.Replace(splitCode[i], "\\*\\*", "^");
                 splitCode[i] = Regex.Replace(splitCode[i], "(?<![a-zA-Z])END(?![a-zA-Z])", "☼");
+                splitCode[i] = Regex.Replace(splitCode[i], "(?<![a-zA-Z])SQRT(?![a-zA-Z])", "S");
             }
             else
             {

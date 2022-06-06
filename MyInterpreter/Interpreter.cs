@@ -8,33 +8,32 @@ namespace MyInterpreter;
 
 public class Interpreter
 {
-    private readonly Code _code;
     private readonly Executor _executor;
     private readonly Parser.Parser _parser;
-    private string? _codeString;
 
-    internal int position;
+    internal int Position;
 
     public Interpreter(Code code)
     {
-        _code = code;
-        _parser = new Parser.Parser(_code);
+        _parser = new Parser.Parser(code);
         _executor = new Executor(this);
         SortAllEnumerations();
     }
 
     public void Execute(bool writeDebugInfo = true)
     {
-        StringBuilder a = new();
-        for (var i = 0; i < Console.BufferWidth; i++) a.Append('-');
-        
-        _parser.GenerateTokens();
+        StringBuilder bufferSeparator = new();
+        for (var i = 0; i < Console.BufferWidth; i++) bufferSeparator.Append('-');
+
         if (writeDebugInfo)
         {
-            Console.Write($"Start\n{a}\n");
-            Thread.Sleep(1);
-            var executionTime = MethodExecutionTime(Main);
-            Console.WriteLine($"\n{a}\nExecution time: " + executionTime);
+            Console.WriteLine("\nPrepare code...");
+            var executionTime = MethodExecutionTime(_parser.GenerateTokens);
+            Console.WriteLine($"Code preparation time: {executionTime} ms");
+
+            Console.WriteLine($"Start execute the code\n{bufferSeparator}");
+            executionTime = MethodExecutionTime(Main);
+            Console.WriteLine($"\n{bufferSeparator}Execution time: {executionTime} ms");
         }
         else
         {
@@ -44,14 +43,17 @@ public class Interpreter
 
     private int Main()
     {
-        if (Tokens[position].IsCommand) _executor.RunCommands();
+        while (Position < Tokens.Count)
+            if (Tokens[Position].IsCommand) Executor.RunCommands();
+            else Position++;
+
         return 0;
     }
 
     private static void SortAllEnumerations()
     {
-        EnumerationCommandsAndWords.BubbleEnumerationCommandsSort();
-        EnumerationCommandsAndWords.BubbleEnumerationWordSort();
+        CommandsAndWords.BubbleCommandsSort();
+        CommandsAndWords.BubbleWordSort();
     }
 }
 
@@ -64,31 +66,33 @@ public class Executor
         _interpreter = interpreter;
     }
 
-    public void RunCommands()
+    public static void RunCommands()
     {
-        var commandKind = Tokens[_interpreter.position].Kind;
+        var commandKind = Tokens[_interpreter.Position].Kind;
         if (commandKind is TokenKind.print or TokenKind.printLn)
         {
-            _interpreter.position += 2;
+            _interpreter.Position += 1;
             StringBuilder outputStr = new();
             var count = 0;
-            while (Tokens[_interpreter.position].Kind != TokenKind.ParenthesesClose)
+            while (Tokens[_interpreter.Position].Kind != TokenKind.ParenthesesClose)
             {
-                if (count++ == Program.MaxRepetition) ThrowMaxRepetitions(Program.MaxRepetition);
-                switch (Tokens[_interpreter.position].Kind)
+                if (++count == Program.MaxRepetition) ThrowMaxRepetitions(Program.MaxRepetition);
+                switch (Tokens[_interpreter.Position].Kind)
                 {
                     case TokenKind.Сomma:
-                        _interpreter.position++;
+                        _interpreter.Position++;
                         continue;
                     case TokenKind.String or TokenKind.Number:
-                        outputStr.Append(Tokens[_interpreter.position].Value);
+                        outputStr.Append(Tokens[_interpreter.Position].Value);
                         break;
                     default:
-                        PrintCanPrintOnlyStrAndNumbers("\"{Tokens[_interpreter.position].Text}\" is {Tokens[_interpreter.position].Kind}");
+                        PrintCanPrintOnlyStrAndNumbers(
+                            $"\"{Tokens[_interpreter.Position].Text}\" is {Tokens[_interpreter.Position].Kind}");
                         break;
                 }
 
-                _interpreter.position++;
+                _interpreter.Position++;
+                if (_interpreter.Position >= Tokens.Count) MaybeForgotParenthese();
             }
 
             if (commandKind == TokenKind.printLn) outputStr.Append('\n');

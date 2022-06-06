@@ -1,5 +1,7 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using MyInterpreter;
+using static ExceptionThrower.ExceptionThrower;
 using static GlobalData.GlobalData;
 
 namespace Parser;
@@ -16,9 +18,7 @@ public class Parser
 
     public void GenerateTokens()
     {
-        _codeString = _code.CodeString;
-
-        var lexer = new Lexer(_codeString);
+        var lexer = new Lexer(_code.CodeString);
 
         var token = lexer.GetNextToken();
         while (token.Kind != TokenKind.End)
@@ -39,7 +39,7 @@ public class Parser
             var count = 0;
             while (i < Tokens.Count - 1 && Tokens[i + 1].Kind == TokenKind.Unknown)
             {
-                if (count++ == Program.MaxRepetition) ExceptionThrower.ExceptionThrower.ThrowMaxRepetitions(Program.MaxRepetition);
+                if (count++ == Program.MaxRepetition) ThrowMaxRepetitions(Program.MaxRepetition);
                 Tokens[i].Text += Tokens[i + 1].Text;
                 Tokens.RemoveAt(i + 1);
             }
@@ -48,41 +48,88 @@ public class Parser
 
     private static void PreCalculate()
     {
-        var commandWas = false;
-        for (var i = 0; i < Tokens.Count; i++)
+        StringBuilder stringToCalculate = new();
+        var i = 0;
+        while (i < Tokens.Count-1)
         {
-            if (Tokens[i].IsCommand)
-            {
-                commandWas = true;
-                i+=2;
-            }
+            i++;
+            if (Tokens[i].Kind is not (TokenKind.ParenthesesOpen or TokenKind.Number or TokenKind.MathSign))
+                continue;
+            stringToCalculate.Clear();
 
-            if (Tokens[i].Kind is TokenKind.ParenthesesOpen or TokenKind.Number or TokenKind.MathSign)
-            {
-                StringBuilder stringToCalculate = new();
-                var startIndex = i;
-                while (Tokens.Count > i && Tokens[i].Kind is TokenKind.ParenthesesOpen or TokenKind.ParenthesesClose
+            var startIndex = i;
+
+            while (i < Tokens.Count && Tokens[i].Kind is TokenKind.ParenthesesOpen or TokenKind.ParenthesesClose
                        or TokenKind.MathSign or TokenKind.Number)
-                {
-                    stringToCalculate.Append(Tokens[i].Text);
-                    i++;
-                }
-
-                if (commandWas)
-                {
-                    i-=2;
-                    stringToCalculate.Remove(stringToCalculate.Length - 1, 1);
-                }
-
-                var result = Calculator.Calculate(stringToCalculate.ToString());
-
-                Tokens[startIndex].Kind = TokenKind.Number;
-                Tokens[startIndex].Text = result.ToString();
-                Tokens[startIndex].Value = result;
-
-                for (var j = i; j > startIndex; j--)
-                    Tokens.RemoveAt(j);
+            {
+                stringToCalculate.Append(Tokens[i].Text);
+                i++;
             }
+
+            i-=1;
+
+
+            if (stringToCalculate.Length < 2 ||
+                string.IsNullOrEmpty(stringToCalculate.ToString().Replace("(", "").Replace(")", "")))
+            {
+                stringToCalculate.Clear();
+                continue;
+            }
+
+            var result = Calculator.Calculator.Calculate(stringToCalculate.ToString());
+            Console.WriteLine(result);
+            startIndex += CountDontClosedParentheses(stringToCalculate);
+            Tokens[startIndex].Kind = TokenKind.Number;
+            Tokens[startIndex].Text = result.ToString();
+            Tokens[startIndex].Value = result;
+
+            for (var j = i - CountDontOpenedParentheses(stringToCalculate); j > startIndex; j--)
+                Tokens.RemoveAt(j);
+            i = startIndex+1;
         }
+    }
+
+    private static int CountDontOpenedParentheses(StringBuilder stringBuilder)
+    {
+        var position = 0;
+        var opened = 0;
+        while (stringBuilder.Length > position)
+        {
+            if (stringBuilder[position] == '(')
+            {
+                opened++;
+            }
+            else if (opened > 0 && stringBuilder[position] == ')')
+            {
+                opened--;
+                stringBuilder.Remove(position, 1);
+            }
+
+            position++;
+        }
+
+        return Regex.Match(stringBuilder.ToString(), "\\)").Length;
+    }
+
+    private static int CountDontClosedParentheses(StringBuilder stringBuilder)
+    {
+        var position = 0;
+        var opened = 0;
+        while (stringBuilder.Length > position)
+        {
+            if (stringBuilder[position] == '(')
+            {
+                opened++;
+                stringBuilder.Remove(position, 1);
+            }
+            else if (opened > 0 && stringBuilder[position] == ')')
+            {
+                opened--;
+            }
+
+            position++;
+        }
+
+        return Regex.Match(stringBuilder.ToString(), "\\(").Length;
     }
 }

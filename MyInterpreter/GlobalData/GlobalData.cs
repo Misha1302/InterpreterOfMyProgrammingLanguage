@@ -9,10 +9,12 @@ public static class GlobalData
     public static string[] MathSymbols =
     {
         "+", "-",
-        "*", "/",
+        "*", 
+        "/", ":",
         "^", // "^" образуется из "**"
         "%", @"\",  // "\" образуется из "//"; "%" образуются из "% from" и "%from" 
-        "!"
+        "!",
+        "S" // Sqrt
     };
 }
 /*

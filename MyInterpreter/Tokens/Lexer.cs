@@ -8,12 +8,13 @@ namespace MyInterpreter;
 public class Lexer
 {
     private readonly string _code;
+    private int _lastMethodIndex;
     private int _position;
 
-    public Lexer(string? code)
+    public Lexer(string code)
     {
-        if (!string.IsNullOrEmpty(code))
-            _code = code;
+        if (string.IsNullOrEmpty(code)) SmthCannotBeEmpty("Code");
+        _code = code;
     }
 
     public Token GetNextToken()
@@ -53,11 +54,11 @@ public class Lexer
 
     private Token ReturnCommandOrUnknown()
     {
-        for (var i = 0; i < EnumerationCommandsAndWords.Commands.Length; i++)
-            if (_code.IndexOf(EnumerationCommandsAndWords.Commands[i].@string, StringComparison.Ordinal) == _position)
-                return new Token(EnumerationCommandsAndWords.Commands[i].@enum,
-                    EnumerationCommandsAndWords.Commands[i].@string,
-                    _position += EnumerationCommandsAndWords.Commands[i].@string.Length, isCommand: true);
+        for (var i = 0; i < CommandsAndWords.Commands.Length; i++)
+            if (_code[_position..].IndexOf(CommandsAndWords.Commands[i].@string, StringComparison.Ordinal) == 0)
+                return new Token(CommandsAndWords.Commands[i].@enum,
+                    CommandsAndWords.Commands[i].@string,
+                    _position += CommandsAndWords.Commands[i].@string.Length, isCommand: true);
 
         return new Token(TokenKind.Unknown, _code[_position].ToString(), _position++);
     }

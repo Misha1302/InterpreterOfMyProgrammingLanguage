@@ -1,12 +1,12 @@
 ﻿using System.Numerics;
 using static ExceptionThrower.ExceptionThrower;
 
-namespace MyInterpreter;
+namespace Calculator;
 
 public static class Calculator
 {
     private static readonly string[] DoubleOperands = { "+", "-", "*", "/", "^", "\\", "%" };
-    private static readonly string[] SinglesOperands = { "!" };
+    private static readonly string[] SinglesOperands = { "!", "S" };
 
     public static BigFloat Calculate(string str)
     {
@@ -117,29 +117,30 @@ public static class Calculator
         return res;
     }
 
-    private static BigFloat Compute(IList<string?> res)
+    private static BigFloat Compute(IList<string> res)
     {
         // foreach (var VARIABLE in res) Console.Write(VARIABLE + " ");
         // Console.WriteLine();
 
-        BigFloat aM;
+        BigFloat firstBigFloat;
 
         for (var x = 1; x < res.Count; x++)
             if (DoubleOperands.Contains(res[x]))
             {
-                aM = BigFloat.Parse(res[x - 1]);
-                var bM = BigFloat.Parse(res[x - 2]);
+                firstBigFloat = BigFloat.Parse(res[x - 1]);
+                var secondBigFloat = BigFloat.Parse(res[x - 2]);
 
 
                 object? sum = res[x] switch
                 {
-                    "+" => bM + aM,
-                    "-" => bM - aM,
-                    "*" => bM * aM,
-                    "/" => bM / aM,
-                    "%" => GetPercent(bM, aM),
-                    "\\" => bM % aM,
-                    "^" => bM ^ aM,
+                    "+" => secondBigFloat + firstBigFloat,
+                    "-" => secondBigFloat - firstBigFloat,
+                    "*" => secondBigFloat * firstBigFloat,
+                    "/" => secondBigFloat / firstBigFloat,
+                    ":" => secondBigFloat / firstBigFloat,
+                    "%" => GetPercent(secondBigFloat, firstBigFloat),
+                    "\\" => secondBigFloat % firstBigFloat,
+                    "^" => BigFloat.Pow(secondBigFloat, firstBigFloat),
                     _ => res[x - 2]
                 };
 
@@ -150,13 +151,13 @@ public static class Calculator
             }
             else if (SinglesOperands.Contains(res[x]))
             {
-                aM = BigFloat.Parse(res[x - 1]);
+                firstBigFloat = BigFloat.Parse(res[x - 1]);
 
                 var sum = res[x] switch
                 {
-                    "!" => Factorial(BigFloat.Round(aM)),
-                    //"√" => GetRoot(aM)
-                    _ => aM
+                    "!" => Factorial(firstBigFloat),
+                    "S" => BigFloat.Root(firstBigFloat),
+                    _ => firstBigFloat
                 };
 
                 res[x - 1] = sum.ToString().Replace(',', '.');
@@ -181,12 +182,10 @@ public static class Calculator
 
     private static BigFloat Factorial(BigFloat digit)
     {
+        if (digit - BigFloat.WholePart(digit) != 0) AttemptToFindFactorialFromNonInteger(digit);
         BigFloat res = 1;
         for (var i = digit; i > 0; i--)
-        {
-            if (i % 50 == 0) Thread.Sleep(5);
             res *= i;
-        }
         return res;
     }
 
