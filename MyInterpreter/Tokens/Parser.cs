@@ -39,7 +39,7 @@ public class Parser
             var count = 0;
             while (i < Tokens.Count - 1 && Tokens[i + 1].Kind == TokenKind.Unknown)
             {
-                if (count++ == Program.MaxRepetition) ThrowMaxRepetitions(Program.MaxRepetition);
+                if (count++ == Program.MaxRepetitions) ThrowMaxRepetitions(Program.MaxRepetitions);
                 Tokens[i].Text += Tokens[i + 1].Text;
                 Tokens.RemoveAt(i + 1);
             }
@@ -50,13 +50,13 @@ public class Parser
     {
         StringBuilder stringToCalculate = new();
         var i = 0;
-        while (i < Tokens.Count-1)
+        while (i < Tokens.Count - 1)
         {
             i++;
             if (Tokens[i].Kind is not (TokenKind.ParenthesesOpen or TokenKind.Number or TokenKind.MathSign))
                 continue;
-            stringToCalculate.Clear();
 
+            stringToCalculate.Clear();
             var startIndex = i;
 
             while (i < Tokens.Count && Tokens[i].Kind is TokenKind.ParenthesesOpen or TokenKind.ParenthesesClose
@@ -66,7 +66,7 @@ public class Parser
                 i++;
             }
 
-            i-=1;
+            i--;
 
 
             if (stringToCalculate.Length < 2 ||
@@ -77,7 +77,7 @@ public class Parser
             }
 
             var result = Calculator.Calculator.Calculate(stringToCalculate.ToString());
-            Console.WriteLine(result);
+
             startIndex += CountDontClosedParentheses(stringToCalculate);
             Tokens[startIndex].Kind = TokenKind.Number;
             Tokens[startIndex].Text = result.ToString();
@@ -85,7 +85,7 @@ public class Parser
 
             for (var j = i - CountDontOpenedParentheses(stringToCalculate); j > startIndex; j--)
                 Tokens.RemoveAt(j);
-            i = startIndex+1;
+            i = startIndex + 1;
         }
     }
 

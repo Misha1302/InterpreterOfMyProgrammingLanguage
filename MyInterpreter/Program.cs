@@ -2,7 +2,7 @@
 
 public static class Program
 {
-    public const int MaxRepetition = 100_000;
+    public const int MaxRepetitions = 100_000;
 
     private static void Main()
     {

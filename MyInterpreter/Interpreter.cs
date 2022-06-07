@@ -37,17 +37,16 @@ public class Interpreter
         }
         else
         {
+            _parser.GenerateTokens();
             Main();
         }
     }
 
-    private int Main()
+    private void Main()
     {
         while (Position < Tokens.Count)
             if (Tokens[Position].IsCommand) Executor.RunCommands();
             else Position++;
-
-        return 0;
     }
 
     private static void SortAllEnumerations()
@@ -76,7 +75,7 @@ public class Executor
             var count = 0;
             while (Tokens[_interpreter.Position].Kind != TokenKind.ParenthesesClose)
             {
-                if (++count == Program.MaxRepetition) ThrowMaxRepetitions(Program.MaxRepetition);
+                if (++count == Program.MaxRepetitions) ThrowMaxRepetitions(Program.MaxRepetitions);
                 switch (Tokens[_interpreter.Position].Kind)
                 {
                     case TokenKind.Сomma:
